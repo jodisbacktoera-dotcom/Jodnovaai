@@ -1,0 +1,145 @@
+import { useState, useRef, useEffect } from "react";
+
+export default function App() {
+  const [message, setMessage] = useState("");
+  const [chat, setChat] = useState([]);
+  const [image, setImage] = useState(null);
+  const endRef = useRef(null);
+
+  const sendMessage = () => {
+    if (!message && !image) return;
+
+    const newChat = [
+      ...chat,
+      { type: "user", text: message, image },
+      { type: "ai", text: "🤖 Reply aa gaya bhai 😄" }
+    ];
+
+    setChat(newChat);
+    setMessage("");
+    setImage(null);
+  };
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat]);
+
+  return (
+    <div style={{
+      background: "#ffffff",
+      height: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      fontFamily: "sans-serif"
+    }}>
+
+      {/* HEADER */}
+      <div style={{
+        padding: "15px",
+        borderBottom: "1px solid #ddd",
+        fontWeight: "bold"
+      }}>
+        🤖 My AI
+      </div>
+
+      {/* CHAT */}
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "10px"
+      }}>
+        {chat.map((c, i) => (
+          <div key={i} style={{
+            display: "flex",
+            justifyContent: c.type === "user" ? "flex-end" : "flex-start"
+          }}>
+            <div style={{
+              background: c.type === "user" ? "#000" : "#f1f1f1",
+              color: c.type === "user" ? "white" : "black",
+              padding: "10px 14px",
+              borderRadius: "15px",
+              margin: "6px",
+              maxWidth: "70%"
+            }}>
+              {c.text}
+
+              {c.image && (
+                <img
+                  src={URL.createObjectURL(c.image)}
+                  style={{
+                    width: "100%",
+                    marginTop: "8px",
+                    borderRadius: "10px"
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        ))}
+        <div ref={endRef}></div>
+      </div>
+
+      {/* INPUT AREA */}
+      <div style={{
+        padding: "10px",
+        borderTop: "1px solid #ddd"
+      }}>
+
+        {/* IMAGE UPLOAD */}
+        <input
+          type="file"
+          onChange={(e) => setImage(e.target.files[0])}
+          style={{ marginBottom: "5px" }}
+        />
+
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "5px"
+        }}>
+
+          {/* INPUT */}
+          <input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type message..."
+            style={{
+              flex: 1,
+              padding: "10px",
+              borderRadius: "10px",
+              border: "1px solid #ccc",
+              outline: "none"
+            }}
+          />
+
+          {/* VOICE BUTTON */}
+          <button style={{
+            padding: "10px",
+            borderRadius: "10px",
+            border: "none",
+            background: "#e5e5e5"
+          }}>
+            🎤
+          </button>
+
+          {/* SEND BUTTON */}
+          <button
+            onClick={sendMessage}
+            style={{
+              padding: "10px 15px",
+              borderRadius: "10px",
+              border: "none",
+              background: "black",
+              color: "white",
+              fontWeight: "bold"
+            }}
+          >
+            Send
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}

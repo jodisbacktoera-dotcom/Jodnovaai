@@ -1,0 +1,125 @@
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #fcfcfc;
+}
+
+/* APP */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #7c3aed;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.status {
+  font-size: 12px;
+  color: #10b981;
+}
+
+/* CHAT */
+.chat {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+/* BUBBLES */
+.bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  margin: 6px 0;
+  border-radius: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.user {
+  background: #7c3aed;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 6px;
+}
+
+.ai {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #0f172a;
+  margin-right: auto;
+  border-bottom-left-radius: 6px;
+}
+
+/* INPUT */
+.inputbar {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.plus {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  margin-right: 8px;
+  background: #f1f5f9;
+}
+
+input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: #f1f5f9;
+  padding: 10px 14px;
+  border-radius: 20px;
+}
+
+.send {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  margin-left: 8px;
+  background: #7c3aed;
+  color: white;
+  font-size: 18px;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

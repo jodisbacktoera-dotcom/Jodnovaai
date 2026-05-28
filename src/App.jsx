@@ -3,10 +3,9 @@ import './App.css';
 
 function App() {
   const [messages, setMessages] = useState(() => {
-    // मेमोरी सिस्टम: पहले से सेव चैट लोड करना
     const saved = localStorage.getItem('nova_chat_history');
     return saved ? JSON.parse(saved) : [
-      { id: 1, text: "Hey! Main NOVA AI hoon. Main aapka naam yaad rakh sakta hoon, voice me baat kar sakta hoon aur photo bhi bana sakta hoon. Baniye kya madad karu?", isBot: true }
+      { id: 1, text: "Hey! Main NOVA AI hoon. Satyarth ne mujhe banaya hai. Main aapse live voice me baat kar sakta hoon aur photo bhi bana sakta hoon. Baniye kya madad karu?", isBot: true }
     ];
   });
   
@@ -14,114 +13,132 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const chatEndRef = useRef(null);
 
-  // चैट हिस्ट्री को मेमोरी (localStorage) में सेव रखना
   useEffect(() => {
     localStorage.setItem('nova_chat_history', JSON.stringify(messages));
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 🎙️ VOICE TO TEXT (आपकी आवाज़ सुनना)
-  const startSpeechRecognition = () => {
+  // 🎙️ LIVE AUDIO CHAT SYSTEM (कॉल की तरह बोलना और सुनना)
+  const toggleLiveVoiceChat = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Aapka browser voice typing support nahi karta. Chrome use karein.");
+      alert("Aapka device live voice support nahi karta. Google Chrome use karein.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN'; // हिंदी और इंग्लिश मिक्स समझेगा
+    recognition.lang = 'hi-IN'; 
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => setIsListening(true);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
 
     recognition.onresult = (event) => {
-      const speechToText = event.results[0][0].transcript;
-      setInput(speechToText);
+      const liveSpeechText = event.results.transcript;
+      processLiveAIResponse(liveSpeechText);
     };
 
     recognition.start();
   };
 
-  // 🔊 TEXT TO SPEECH (AI का बोलकर जवाब देना)
-  const speakText = (text) => {
+  // 🔊 LIVE AUDIO RESPONSE (AI तुरंत बोलकर जवाब देगा)
+  const speakLiveVoice = (text) => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // पुराना बोलना बंद करें
+      window.speechSynthesis.cancel(); 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'hi-IN';
+      utterance.rate = 1.0; 
+      utterance.pitch = 1.1; 
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  // एआई का दिमाग - ओनर का नाम 'Satyarth' और फोटो जनरेशन हैंडलर
+  const processLiveAIResponse = (userText) => {
+    if (!userText.trim()) return;
 
-    const userText = input;
     const userMessage = { id: Date.now(), text: userText, isBot: false };
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
 
-    // अस्थायी बोट मैसेज (Loading...)
     const botLoadingId = Date.now() + 1;
-    setMessages(prev => [...prev, { id: botLoadingId, text: "Nova soch raha hai...", isBot: true }]);
+    setMessages(prev => [...prev, { id: botLoadingId, text: "Nova sun raha hai...", isBot: true }]);
 
-    try {
+    setTimeout(() => {
       let botResponseText = "";
+      const lowerText = userText.toLowerCase();
 
-      // 📷 PHOTO GENERATION API TRIGGER
-      if (userText.toLowerCase().includes('photo') || userText.toLowerCase().includes('image') || userText.toLowerCase().includes('banao')) {
-        // Pollinations AI का इस्तेमाल करके बिल्कुल फ्री में फोटो बनाना
+      // ओनर का नाम फिक्स (Satyarth)
+      if (lowerText.includes('owner') || lowerText.includes('banaya') || lowerText.includes('maker') || lowerText.includes('who are you') || lowerText.includes('naam')) {
+        botResponseText = "Mujhe Satyarth ne banaya hai. Satyarth hi mere creator aur owner hain.";
+      } 
+      // फोटो जनरेशन सिस्टम
+      else if (lowerText.includes('photo') || lowerText.includes('image') || lowerText.includes('banao')) {
         const encodedPrompt = encodeURIComponent(userText);
         const imageUrl = `https://pollinations.ai{encodedPrompt}?width=512&height=512&seed=${Date.now()}&nofeed=true`;
-        
-        // फोटो को चैट में दिखाने के लिए HTML इमेज टैग की तरह सेव करना
         botResponseText = `IMAGE_URL:${imageUrl}`;
-      } else {
-        // 🧠 MEMORY + CHAT (यहाँ आपकी Gemini API कनेक्ट होगी)
-        // अभी के लिए टेस्टिंग रिस्पॉन्स जब तक आप API Key नहीं डालते
-        if(userText.toLowerCase().includes('naam')) {
-          botResponseText = "Aapne abhi API key set nahi ki hai, isliye mujhe aapka naam yaad rakhne me dikkat ho rahi hai. Vercel par API Key set karein!";
-        } else {
-          botResponseText = `Aapne kaha: "${userText}". Nova Assistant abhi poori tarah ready hai!`;
-        }
+      } 
+      // नॉर्मल बातचीत
+      else {
+        botResponseText = `Satyarth ke Nova AI ne aapki baat sun li. Aapne kaha: "${userText}".`;
       }
 
-      // लोड हो रहे मैसेज को असली जवाब से बदलना
       setMessages(prev => prev.map(msg => 
         msg.id === botLoadingId ? { id: botLoadingId, text: botResponseText, isBot: true } : msg
       ));
 
-      // अगर नॉर्मल टेक्स्ट जवाब है तो AI बोलकर सुनाएगा
+      // लाइव वॉइस रिस्पॉन्स ट्रिगर
       if (!botResponseText.startsWith('IMAGE_URL:')) {
-        speakText(botResponseText);
+        speakLiveVoice(botResponseText);
       }
+    }, 800);
+  };
 
-    } catch (error) {
-      setMessages(prev => prev.map(msg => 
-        msg.id === botLoadingId ? { id: botLoadingId, text: "Oops! Kuch error aa gaya.", isBot: true, isError: true } : msg
-      ));
-    }
+  const handleSendSubmit = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    processLiveAIResponse(input);
+    setInput('');
   };
 
   return (
     <div className="app-container">
+      {/* लोगो और ब्रांडिंग हेडर बार */}
       <header className="app-header">
-        <h1>NOVA MIND AI</h1>
+        <div className="logo-container">
+          <div className="nova-logo-glow"></div>
+          <span className="logo-icon">🌌</span>
+        </div>
+        <h1>NOVA MIND</h1>
       </header>
 
       <main className="chat-area">
         {messages.map((msg) => (
           <div key={msg.id} className={`message-wrapper ${msg.isBot ? 'bot' : 'user'}`}>
-            <div className={`message-box ${msg.isError ? 'error-box' : ''}`}>
+            <div className="message-box">
               {msg.text.startsWith('IMAGE_URL:') ? (
-                <img 
-                  src={msg.text.replace('IMAGE_URL:', '')} 
-                  alt="AI Generated" 
-                  className="ai-generated-img"
-                  loading="lazy"
-                />
+                <div className="image-card">
+                  <img 
+                    src={msg.text.replace('IMAGE_URL:', '')} 
+                    alt="AI Creation" 
+                    className="ai-generated-img"
+                  />
+                  <span className="image-tag">Created by NOVA</span>
+                </div>
               ) : (
                 msg.text
               )}
@@ -132,21 +149,23 @@ function App() {
       </main>
 
       <footer className="input-footer">
-        <form onSubmit={handleSend} className="input-form">
+        <form onSubmit={handleSendSubmit} className="input-form">
           <input 
             type="text" 
-            placeholder="Ask anything or ask to make a photo..." 
+            placeholder="Satyarth ke Nova se baat karein..." 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="chat-input"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
           />
           <button 
             type="button" 
-            onClick={startSpeechRecognition} 
-            className={`action-btn mic-btn ${isListening ? 'listening' : ''}`}
-            title="Voice Chat"
+            onClick={toggleLiveVoiceChat} 
+            className={`action-btn mic-btn ${isListening ? 'live-active' : ''}`}
           >
-            {isListening ? '🛑' : '🎙️'}
+            {isListening ? '🟢' : '🎙️'}
           </button>
           <button type="submit" className="send-btn">➔</button>
         </form>
@@ -156,4 +175,3 @@ function App() {
 }
 
 export default App;
-

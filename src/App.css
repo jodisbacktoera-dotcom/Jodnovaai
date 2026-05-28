@@ -6,7 +6,7 @@
 }
 
 body, html {
-  background-color: #0b0f19;
+  background-color: #080b11;
   color: #ffffff;
   overflow: hidden;
   width: 100vw;
@@ -17,24 +17,51 @@ body, html {
   display: flex;
   flex-direction: column;
   width: 100vw;
-  height: 100dvh; /* Redmi Note 11s Dynamic KeyBoard Height Fix */
-  background-color: #0b0f19;
+  height: 100dvh;
+  background-color: #080b11;
 }
 
+/* प्रीमियम ग्लोइंग लोगो हेडर स्टाइल */
 .app-header {
-  height: 60px;
-  background: #111827;
+  height: 65px;
+  background: #0f141c;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  border-bottom: 1px solid #1f2937;
+  padding: 0 16px;
+  border-bottom: 1px solid #1e2633;
+  gap: 12px;
+}
+
+.logo-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.nova-logo-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #38bdf8;
+  filter: blur(8px);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.logo-icon {
+  font-size: 1.4rem;
+  z-index: 2;
 }
 
 .app-header h1 {
   font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
   color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
 .chat-area {
@@ -44,7 +71,7 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding-bottom: 90px;
+  padding-bottom: 95px;
 }
 
 .message-wrapper {
@@ -63,37 +90,45 @@ body, html {
 .message-box {
   max-width: 85%;
   padding: 12px 16px;
-  border-radius: 18px;
+  border-radius: 20px;
   font-size: 0.95rem;
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: break-word;
 }
 
 .user .message-box {
-  background-color: #2563eb;
+  background: linear-gradient(135deg, #1e40af, #2563eb);
   color: white;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .bot .message-box {
-  background-color: #1f2937;
-  color: #e5e7eb;
+  background-color: #151b26;
+  color: #e2e8f0;
   border-bottom-left-radius: 4px;
+  border: 1px solid #222d3d;
 }
 
-.error-box {
-  background-color: #7f1d1d !important;
-  border: 1px solid #ef4444;
-  color: #fca5a5 !important;
+.image-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-/* AI द्वारा बनाई गई फोटो की स्टाइलिंग */
 .ai-generated-img {
   width: 100%;
-  max-width: 250px;
+  max-width: 260px;
   border-radius: 12px;
-  margin-top: 5px;
   border: 2px solid #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+}
+
+.image-tag {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+  font-style: italic;
 }
 
 .input-footer {
@@ -101,7 +136,7 @@ body, html {
   bottom: 0;
   left: 0;
   width: 100vw;
-  background: #0b0f19;
+  background: #080b11;
   padding: 12px 16px;
   padding-bottom: env(safe-area-inset-bottom, 14px);
   z-index: 99;
@@ -110,8 +145,8 @@ body, html {
 .input-form {
   display: flex;
   align-items: center;
-  background-color: #1f2937;
-  border: 1px solid #374151;
+  background-color: #0f141c;
+  border: 1px solid #222d3d;
   border-radius: 30px;
   padding: 6px 12px;
   gap: 8px;
@@ -133,38 +168,38 @@ body, html {
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
   transition: all 0.2s;
 }
 
-/* माइक रिकॉर्डिंग एनिमेशन */
-.mic-btn.listening {
-  animation: pulse 1s infinite;
-  background: #ef4444;
-  border-radius: 50%;
-  padding: 4px;
+.mic-btn.live-active {
+  background-color: #10b981;
+  box-shadow: 0 0 12px #10b981;
+  animation: voiceGlow 1.2s infinite ease-in-out;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+@keyframes voiceGlow {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .send-btn {
   background-color: #38bdf8;
-  color: #0b0f19;
+  color: #080b11;
   border: none;
   border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  font-size: 0.9rem;
+  width: 36px;
+  height: 36px;
+  font-size: 0.95rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
 }
+

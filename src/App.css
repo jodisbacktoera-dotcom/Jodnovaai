@@ -21,7 +21,6 @@ body, html {
   background-color: #080b11;
 }
 
-/* हेडर फिक्स */
 .app-header {
   height: 60px;
   background: #0f141c;
@@ -36,8 +35,8 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
 }
 
 .header-logo-img {
@@ -45,6 +44,7 @@ body, html {
   height: 100%;
   object-fit: contain;
   border-radius: 50%;
+  background-color: #1e2633;
 }
 
 .app-header h1 {
@@ -135,8 +135,8 @@ body, html {
   background-color: #0f141c;
   border: 1px solid #222d3d;
   border-radius: 30px;
-  padding: 6px 12px;
-  gap: 8px;
+  padding: 6px 14px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -153,17 +153,18 @@ body, html {
 .action-btn {
   background: transparent;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   cursor: pointer;
-  padding: 6px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: transform 0.1s;
 }
 
-.mic-btn.listening-active {
-  background-color: #10b981;
+.action-btn:active {
+  transform: scale(0.9);
 }
 
 .send-btn {

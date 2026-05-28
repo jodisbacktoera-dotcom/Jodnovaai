@@ -11,7 +11,7 @@ function App() {
   });
   
   const [input, setInput] = useState('');
-  const [isListening, setIsListening] = useState(false);
+  const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -19,36 +19,21 @@ function App() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 🎙️ VOICE TYPING SYSTEM (सिर्फ आपकी आवाज़ सुनकर टाइप करेगा, बोट खुद नहीं बोलेगा)
-  const toggleVoiceTyping = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Aapka device voice support nahi karta. Google Chrome use karein.");
-      return;
-    }
-
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN'; 
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognition.onresult = (event) => {
-      const speechToText = event.results.transcript;
-      setInput(speechToText); // आपकी आवाज़ को सिर्फ टेक्स्ट बॉक्स में लिख देगा
-    };
-
-    recognition.start();
+  // 📷 CAMERA / FILE UPLOAD CLICK HANDLER
+  const handleCameraClick = () => {
+    fileInputRef.current.click(); // कैमरा/गैलरी इनपुट ओपन करेगा
   };
 
-  // 🧠 एआई का दिमाग - सीधा और सटीक जवाब (No Text-to-Speech)
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // अभी के लिए फोटो का नाम चैट में दिखाने के लिए
+      const localImageUrl = URL.createObjectURL(file);
+      setMessages(prev => [...prev, { id: Date.now(), text: `IMAGE_URL:${localImageUrl}`, isBot: false }]);
+    }
+  };
+
+  // 🧠 एआई का दिमाग - सीधा और सटीक जवाब
   const processAIResponse = (userText) => {
     if (!userText.trim()) return;
 
@@ -60,7 +45,7 @@ function App() {
 
     setTimeout(() => {
       let botResponseText = "";
-      const lowerText = userText.toLowerCase();
+      const lowerText = userText.toLowerCase().trim();
 
       // ओनर का नाम सिर्फ पूछने पर ही बताएगा
       if (lowerText.includes('owner') || lowerText.includes('banaya') || lowerText.includes('maker') || lowerText.includes('who are you') || lowerText.includes('creator')) {
@@ -73,18 +58,17 @@ function App() {
         botResponseText = `IMAGE_URL:${imageUrl}`;
       } 
       // सामान्य बातचीत
-      else if (lowerText.includes('hello') || lowerText.includes('hey') || lowerText.includes('hi')) {
+      else if (lowerText.includes('hello') || lowerText.includes('hey') || lowerText.includes('hi') || lowerText.includes('hlo') || lowerText.includes('hli')) {
         botResponseText = "Hello! Baniye, kaise hain aap? Aaj kya madad chahiye?";
-      } else if (lowerText.includes('kaise ho')) {
+      } else if (lowerText.includes('kaise ho') || lowerText.includes('kya hal')) {
         botResponseText = "Main badhiya hoon bhai! Aap batao, aap kaise ho?";
       } else {
-        botResponseText = `Aapne pucha: "${userText}". Main iska jawab dhoodh raha hoon.`;
+        botResponseText = "Main aapki baat samajh raha hoon. Jaldi hi iska behtareen jawab dunga.";
       }
 
       setMessages(prev => prev.map(msg => 
         msg.id === botLoadingId ? { id: botLoadingId, text: botResponseText, isBot: true } : msg
       ));
-      // यहाँ से पूरा बोलने वाला फंक्शन (speak) हटा दिया गया है
     }, 600);
   };
 
@@ -116,7 +100,7 @@ function App() {
                     alt="AI Creation" 
                     className="ai-generated-img"
                   />
-                  <span className="image-tag">Created by NOVA</span>
+                  <span className="image-tag">{msg.isBot ? 'Created by NOVA' : 'Uploaded Photo'}</span>
                 </div>
               ) : (
                 msg.text
@@ -129,6 +113,25 @@ function App() {
 
       <footer className="input-footer">
         <form onSubmit={handleSendSubmit} className="input-form">
+          {/* छिपा हुआ कैमरा/फ़ाइल इनपुट */}
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment"
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            style={{ display: 'none' }} 
+          />
+          {/* नया कैमरा बटन */}
+          <button 
+            type="button" 
+            onClick={handleCameraClick} 
+            className="action-btn camera-btn"
+            title="Take Photo"
+          >
+            📷
+          </button>
+          
           <input 
             type="text" 
             placeholder="Type a message..." 
@@ -139,13 +142,7 @@ function App() {
             autoCorrect="off"
             spellCheck="false"
           />
-          <button 
-            type="button" 
-            onClick={toggleVoiceTyping} 
-            className={`action-btn mic-btn ${isListening ? 'listening-active' : ''}`}
-          >
-            {isListening ? '🟢' : '🎙️'}
-          </button>
+          
           <button type="submit" className="send-btn">➔</button>
         </form>
       </footer>

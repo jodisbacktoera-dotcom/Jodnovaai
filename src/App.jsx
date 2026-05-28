@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import logoImg from './assets/logo.png';
 
 function App() {
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('nova_chat_history');
     return saved ? JSON.parse(saved) : [
-      { id: 1, text: "Hey! Main NOVA AI hoon. Baniye aaj main aapki kya madad karu?", isBot: true }
+      { id: 1, text: "Hello! Main NOVA AI hoon. Baniye aaj main aapki kya madad karu?", isBot: true }
     ];
   });
   
@@ -18,11 +19,11 @@ function App() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 🎙️ LIVE AUDIO CHAT SYSTEM (कॉल की तरह बोलना और सुनना)
-  const toggleLiveVoiceChat = () => {
+  // 🎙️ VOICE TYPING SYSTEM (सिर्फ आपकी आवाज़ सुनकर टाइप करेगा, बोट खुद नहीं बोलेगा)
+  const toggleVoiceTyping = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Aapka device live voice support nahi karta. Google Chrome use karein.");
+      alert("Aapka device voice support nahi karta. Google Chrome use karein.");
       return;
     }
 
@@ -34,37 +35,23 @@ function App() {
     const recognition = new SpeechRecognition();
     recognition.lang = 'hi-IN'; 
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => setIsListening(true);
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
 
     recognition.onresult = (event) => {
-      const liveSpeechText = event.results.transcript;
-      processLiveAIResponse(liveSpeechText, true); // true का मतलब आवाज़ से पूछा गया है
+      const speechToText = event.results.transcript;
+      setInput(speechToText); // आपकी आवाज़ को सिर्फ टेक्स्ट बॉक्स में लिख देगा
     };
 
     recognition.start();
   };
 
-  // 🔊 TEXT TO SPEECH (AI का बोलकर जवाब देना)
-  const speakLiveVoice = (text) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'hi-IN';
-      utterance.rate = 1.0; 
-      utterance.pitch = 1.0; 
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  // 🧠 एआई का दिमाग - सीधा और सटीक जवाब
-  const processLiveAIResponse = (userText, shouldSpeak = false) => {
+  // 🧠 एआई का दिमाग - सीधा और सटीक जवाब (No Text-to-Speech)
+  const processAIResponse = (userText) => {
     if (!userText.trim()) return;
 
-    // यूजर का मैसेज स्क्रीन पर दिखाएं
     const userMessage = { id: Date.now(), text: userText, isBot: false };
     setMessages(prev => [...prev, userMessage]);
 
@@ -75,51 +62,45 @@ function App() {
       let botResponseText = "";
       const lowerText = userText.toLowerCase();
 
-      // 1. ओनर का नाम सिर्फ पूछने पर ही बताएगा
+      // ओनर का नाम सिर्फ पूछने पर ही बताएगा
       if (lowerText.includes('owner') || lowerText.includes('banaya') || lowerText.includes('maker') || lowerText.includes('who are you') || lowerText.includes('creator')) {
         botResponseText = "Mujhe Satyarth ne banaya hai, wahi mere creator aur owner hain.";
       } 
-      // 2. फोटो जनरेशन सिस्टम
+      // फोटो जनरेशन सिस्टम
       else if (lowerText.includes('photo') || lowerText.includes('image') || lowerText.includes('banao')) {
         const encodedPrompt = encodeURIComponent(userText);
         const imageUrl = `https://pollinations.ai{encodedPrompt}?width=512&height=512&seed=${Date.now()}&nofeed=true`;
         botResponseText = `IMAGE_URL:${imageUrl}`;
       } 
-      // 3. सामान्य बातचीत - अब कोई फालतू रिपीटेड लाइन नहीं आएगी!
+      // सामान्य बातचीत
       else if (lowerText.includes('hello') || lowerText.includes('hey') || lowerText.includes('hi')) {
         botResponseText = "Hello! Baniye, kaise hain aap? Aaj kya madad chahiye?";
       } else if (lowerText.includes('kaise ho')) {
         botResponseText = "Main badhiya hoon bhai! Aap batao, aap kaise ho?";
       } else {
-        // डिफ़ॉल्ट सीधा जवाब (यहाँ बाद में आपकी असली Gemini API कनेक्ट होगी)
-        botResponseText = `Aapne pucha: "${userText}". Main iska jawab dhoodh raha hoon, jaldi hi seekh jaunga!`;
+        botResponseText = `Aapne pucha: "${userText}". Main iska jawab dhoodh raha hoon.`;
       }
 
-      // स्क्रीन पर जवाब अपडेट करें
       setMessages(prev => prev.map(msg => 
         msg.id === botLoadingId ? { id: botLoadingId, text: botResponseText, isBot: true } : msg
       ));
-
-      // अगर आवाज़ से पूछा था या टाइप करके भी बुलवाना चाहते हैं
-      if (shouldSpeak && !botResponseText.startsWith('IMAGE_URL:')) {
-        speakLiveVoice(botResponseText);
-      }
+      // यहाँ से पूरा बोलने वाला फंक्शन (speak) हटा दिया गया है
     }, 600);
   };
 
   const handleSendSubmit = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-    processLiveAIResponse(input, false); // टाइप करने पर बोट चुप रहेगा, सिर्फ टेक्स्ट दिखाएगा
+    processAIResponse(input);
     setInput('');
   };
 
   return (
     <div className="app-container">
+      {/* परफेक्ट हेडर लेआउट */}
       <header className="app-header">
-        <div className="logo-container">
-          <div className="nova-logo-glow"></div>
-          <span className="logo-icon">🌌</span>
+        <div className="logo-box">
+          <img src={logoImg} alt="Logo" className="header-logo-img" />
         </div>
         <h1>NOVA MIND</h1>
       </header>
@@ -160,9 +141,8 @@ function App() {
           />
           <button 
             type="button" 
-            onClick={toggleLiveVoiceChat} 
-            className={`action-btn mic-btn ${isListening ? 'live-active' : ''}`}
-            title="Voice Chat"
+            onClick={toggleVoiceTyping} 
+            className={`action-btn mic-btn ${isListening ? 'listening-active' : ''}`}
           >
             {isListening ? '🟢' : '🎙️'}
           </button>

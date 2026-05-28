@@ -21,9 +21,9 @@ body, html {
   background-color: #080b11;
 }
 
-/* प्रीमियम ग्लोइंग लोगो हेडर स्टाइल */
+/* हेडर फिक्स */
 .app-header {
-  height: 65px;
+  height: 60px;
   background: #0f141c;
   display: flex;
   align-items: center;
@@ -32,36 +32,26 @@ body, html {
   gap: 12px;
 }
 
-.logo-container {
-  position: relative;
+.logo-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
 }
 
-.nova-logo-glow {
-  position: absolute;
+.header-logo-img {
   width: 100%;
   height: 100%;
-  background: #38bdf8;
-  filter: blur(8px);
+  object-fit: contain;
   border-radius: 50%;
-  opacity: 0.6;
-}
-
-.logo-icon {
-  font-size: 1.4rem;
-  z-index: 2;
 }
 
 .app-header h1 {
   font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   color: #38bdf8;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
 .chat-area {
@@ -100,7 +90,6 @@ body, html {
   background: linear-gradient(135deg, #1e40af, #2563eb);
   color: white;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .bot .message-box {
@@ -118,17 +107,15 @@ body, html {
 
 .ai-generated-img {
   width: 100%;
-  max-width: 260px;
+  max-width: 250px;
   border-radius: 12px;
   border: 2px solid #38bdf8;
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
 }
 
 .image-tag {
   font-size: 0.75rem;
   color: #64748b;
   text-align: right;
-  font-style: italic;
 }
 
 .input-footer {
@@ -173,19 +160,10 @@ body, html {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s;
 }
 
-.mic-btn.live-active {
+.mic-btn.listening-active {
   background-color: #10b981;
-  box-shadow: 0 0 12px #10b981;
-  animation: voiceGlow 1.2s infinite ease-in-out;
-}
-
-@keyframes voiceGlow {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
 }
 
 .send-btn {

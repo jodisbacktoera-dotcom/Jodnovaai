@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const ai = new GoogleGenAI({ apiKey: "AlzaSyDk20kZW7ieRysSXRTgKJ6Mm72qNBFnqh0" });
+// आपकी बिल्कुल सही API Key
+const genAI = new GoogleGenerativeAI("AlzaSyDk20kZW7ieRysSXRTgKJ6Mm72qNBFnqh0");
 
 function App() {
   const [messages, setMessages] = useState([
@@ -9,8 +10,23 @@ function App() {
   ]);
   const [input, setInput] = useState("");
   const chatBoxRef = useRef(null);
-  const geminiHistory = useRef([]);
 
+  // चैट हिस्ट्री को सही फॉर्मेट में रखने के लिए
+  const [chatSession, setChatSession] = useState(null);
+
+  // पहली बार ऐप लोड होने पर जेमिनी चैट सेशन शुरू करें
+  useEffect(() => {
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: "You are a friendly AI assistant named NOVA MIND. Always reply naturally in Hinglish. Remember user details like their name throughout the conversation. Give real and unique responses. Never use boilerplate text like 'Main aapki baat samajh raha hoon'.",
+    });
+    
+    // यह अपने आप पूरी हिस्ट्री याद रखेगा
+    const session = model.startChat({ history: [] });
+    setChatSession(session);
+  }, []);
+
+  // ऑटो स्क्रॉल डाउन
   useEffect(() => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -19,41 +35,33 @@ function App() {
 
   const sendMessage = async () => {
     const messageText = input.trim();
-    if (!messageText) return;
+    if (!messageText || !chatSession) return;
 
+    // 1. यूजर का मैसेज दिखाएं
     setMessages(prev => [...prev, { text: messageText, sender: "user" }]);
     setInput("");
+
+    // 2. 'Thinking...' लोड कराएं
     setMessages(prev => [...prev, { text: "Thinking...", sender: "bot" }]);
 
     try {
-      const contents = [...geminiHistory.current];
-      contents.push({ role: 'user', parts: [{ text: messageText }] });
+      // 3. जेमिनी चैट सेशन को सीधे मैसेज भेजें
+      const result = await chatSession.sendMessage(messageText);
+      const botReply = result.response.text();
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: contents,
-        config: {
-          systemInstruction: "You are a friendly AI assistant named NOVA MIND. Always reply naturally in Hinglish. Give real and unique responses. Never use boilerplate text like 'Main aapki baat samajh raha hoon'.",
-        }
-      });
-
-      const botReply = response.text;
-
+      // 4. 'Thinking...' हटाकर असली जवाब अपडेट करें
       setMessages(prev => {
         const updated = [...prev];
         updated.pop(); 
         return [...updated, { text: botReply, sender: "bot" }];
       });
 
-      geminiHistory.current.push({ role: 'user', parts: [{ text: messageText }] });
-      geminiHistory.current.push({ role: 'model', parts: [{ text: botReply }] });
-
     } catch (error) {
       console.error(error);
       setMessages(prev => {
         const updated = [...prev];
         updated.pop();
-        return [...updated, { text: "Error: कनेक्ट नहीं हो पा रहा है।", sender: "bot" }];
+        return [...updated, { text: "Error: जेमिनी रिस्पॉन्स नहीं दे पा रहा है।", sender: "bot" }];
       });
     }
   };

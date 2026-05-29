@@ -1,151 +1,95 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './App.css';
-import logoImg from './assets/logo.png';
+import React, { useState, useRef, useEffect } from 'react';
+import { GoogleGenAI } from '@google/genai';
+import './app.css';
+
+// 1. यहाँ अपनी API Key सीधे डाल दें (चूँकि यह पूरी तरह फ्रंटएंड ऐप है)
+const ai = new GoogleGenAI({ apiKey: "AlzaSyDk20kZW7ieRysSXRTgKJ6Mm72qNBFnqh0" });
 
 function App() {
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('nova_chat_history');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, text: "Hello! Main NOVA AI hoon. Baniye aaj main aapki kya madad karu?", isBot: true }
-    ];
-  });
-  
-  const [input, setInput] = useState('');
-  const fileInputRef = useRef(null);
-  const chatEndRef = useRef(null);
+  const [messages, setMessages] = useState([
+    { text: "Hello! Baniye, kaise hain aap? Aaj kya madad chahiye?", sender: "bot" }
+  ]);
+  const [input, setInput] = useState("");
+  const chatBoxRef = useRef(null);
 
+  // चैट हिस्ट्री को जेमिनी के फॉर्मेट में रखने के लिए रिफ (Ref)
+  const geminiHistory = useRef([]);
+
+  // ऑटो स्क्रॉल डाउन करने के लिए
   useEffect(() => {
-    localStorage.setItem('nova_chat_history', JSON.stringify(messages));
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  // 📷 CAMERA / FILE UPLOAD CLICK HANDLER
-  const handleCameraClick = () => {
-    fileInputRef.current.click(); // कैमरा/गैलरी इनपुट ओपन करेगा
-  };
+  const sendMessage = async () => {
+    const messageText = input.trim();
+    if (!messageText) return;
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // अभी के लिए फोटो का नाम चैट में दिखाने के लिए
-      const localImageUrl = URL.createObjectURL(file);
-      setMessages(prev => [...prev, { id: Date.now(), text: `IMAGE_URL:${localImageUrl}`, isBot: false }]);
+    // 1. स्क्रीन पर यूजर का मैसेज जोड़ें
+    setMessages(prev => [...prev, { text: messageText, sender: "user" }]);
+    setInput("");
+
+    // 2. स्क्रीन पर 'Thinking...' लोड कराएं
+    setMessages(prev => [...prev, { text: "Thinking...", sender: "bot", isThinking: true }]);
+
+    try {
+      // 3. जेमिनी के लिए हिस्ट्री एरे तैयार करें और नया मैसेज जोड़ें
+      const contents = [...geminiHistory.current];
+      contents.push({ role: 'user', parts: [{ text: messageText }] });
+
+      // 4. सीधे फ्रंटएंड से जेमिनी API को कॉल करें
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: contents,
+        config: {
+          systemInstruction: "You are a friendly AI assistant named NOVA MIND. Always reply naturally in Hinglish. Remember user details like their name throughout the conversation. Give real and unique responses. Never use boilerplate text like 'Main aapki baat samajh raha hoon'.",
+        }
+      });
+
+      const botReply = response.text;
+
+      // 5. 'Thinking...' हटाकर असली जवाब से अपडेट करें
+      setMessages(prev => {
+        const updated = [...prev];
+        updated.pop(); // Thinking... वाले मैसेज को हटाया
+        return [...updated, { text: botReply, sender: "bot" }];
+      });
+
+      // 6. इस बातचीत को हिस्ट्री में सेव करें ताकि अगली बार याद रहे
+      geminiHistory.current.push({ role: 'user', parts: [{ text: messageText }] });
+      geminiHistory.current.push({ role: 'model', parts: [{ text: botReply }] });
+
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      setMessages(prev => {
+        const updated = [...prev];
+        updated.pop();
+        return [...updated, { text: "Error: जेमिनी कनेक्ट नहीं हो पा रहा है।", sender: "bot" }];
+      });
     }
   };
 
-  // 🧠 एआई का दिमाग - सीधा और सटीक जवाब
-  const processAIResponse = (userText) => {
-    if (!userText.trim()) return;
-
-    const userMessage = { id: Date.now(), text: userText, isBot: false };
-    setMessages(prev => [...prev, userMessage]);
-
-    const botLoadingId = Date.now() + 1;
-    setMessages(prev => [...prev, { id: botLoadingId, text: "Soch raha hoon...", isBot: true }]);
-
-    setTimeout(() => {
-      let botResponseText = "";
-      const lowerText = userText.toLowerCase().trim();
-
-      // ओनर का नाम सिर्फ पूछने पर ही बताएगा
-      if (lowerText.includes('owner') || lowerText.includes('banaya') || lowerText.includes('maker') || lowerText.includes('who are you') || lowerText.includes('creator')) {
-        botResponseText = "Mujhe Satyarth ne banaya hai, wahi mere creator aur owner hain.";
-      } 
-      // फोटो जनरेशन सिस्टम
-      else if (lowerText.includes('photo') || lowerText.includes('image') || lowerText.includes('banao')) {
-        const encodedPrompt = encodeURIComponent(userText);
-        const imageUrl = `https://pollinations.ai{encodedPrompt}?width=512&height=512&seed=${Date.now()}&nofeed=true`;
-        botResponseText = `IMAGE_URL:${imageUrl}`;
-      } 
-      // सामान्य बातचीत
-      else if (lowerText.includes('hello') || lowerText.includes('hey') || lowerText.includes('hi') || lowerText.includes('hlo') || lowerText.includes('hli')) {
-        botResponseText = "Hello! Baniye, kaise hain aap? Aaj kya madad chahiye?";
-      } else if (lowerText.includes('kaise ho') || lowerText.includes('kya hal')) {
-        botResponseText = "Main badhiya hoon bhai! Aap batao, aap kaise ho?";
-      } else {
-        botResponseText = "Main aapki baat samajh raha hoon. Jaldi hi iska behtareen jawab dunga.";
-      }
-
-      setMessages(prev => prev.map(msg => 
-        msg.id === botLoadingId ? { id: botLoadingId, text: botResponseText, isBot: true } : msg
-      ));
-    }, 600);
-  };
-
-  const handleSendSubmit = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    processAIResponse(input);
-    setInput('');
-  };
-
   return (
-    <div className="app-container">
-      {/* परफेक्ट हेडर लेआउट */}
-      <header className="app-header">
-        <div className="logo-box">
-          <img src={logoImg} alt="Logo" className="header-logo-img" />
-        </div>
-        <h1>NOVA MIND</h1>
-      </header>
-
-      <main className="chat-area">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`message-wrapper ${msg.isBot ? 'bot' : 'user'}`}>
-            <div className="message-box">
-              {msg.text.startsWith('IMAGE_URL:') ? (
-                <div className="image-card">
-                  <img 
-                    src={msg.text.replace('IMAGE_URL:', '')} 
-                    alt="AI Creation" 
-                    className="ai-generated-img"
-                  />
-                  <span className="image-tag">{msg.isBot ? 'Created by NOVA' : 'Uploaded Photo'}</span>
-                </div>
-              ) : (
-                msg.text
-              )}
-            </div>
+    <div className="chat-container">
+      <div className="chat-box" ref={chatBoxRef}>
+        {messages.map((msg, index) => (
+          <div key={index} className={`message ${msg.sender}`}>
+            {msg.text}
           </div>
         ))}
-        <div ref={chatEndRef} />
-      </main>
-
-      <footer className="input-footer">
-        <form onSubmit={handleSendSubmit} className="input-form">
-          {/* छिपा हुआ कैमरा/फ़ाइल इनपुट */}
-          <input 
-            type="file" 
-            accept="image/*" 
-            capture="environment"
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            style={{ display: 'none' }} 
-          />
-          {/* नया कैमरा बटन */}
-          <button 
-            type="button" 
-            onClick={handleCameraClick} 
-            className="action-btn camera-btn"
-            title="Take Photo"
-          >
-            📷
-          </button>
-          
-          <input 
-            type="text" 
-            placeholder="Type a message..." 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="chat-input"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-          />
-          
-          <button type="submit" className="send-btn">➔</button>
-        </form>
-      </footer>
+      </div>
+      
+      <div className="input-area">
+        <input 
+          type="text" 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type a message..." 
+          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+        />
+        <button onClick={sendMessage}>Send</button>
+      </div>
     </div>
   );
 }

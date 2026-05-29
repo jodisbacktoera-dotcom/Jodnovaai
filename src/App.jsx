@@ -23,32 +23,20 @@ function App() {
     setMessages(prev => [...prev, { text: "Thinking...", sender: "bot" }]);
 
     try {
-      // ध्यान दें: यहाँ हमने सीधा OpenRouter की जगह Vercel एनवायरनमेंट वेरिएबल का उपयोग करने के लिए रीराइट किया है
-      // ब्राउज़र से ब्लॉक होने से बचने के लिए हम Vercel पर सेट वेरिएबल का उपयोग करेंगे
-      const response = await fetch("https://openrouter.ai", {
+      // अब हम सीधे बाहरी API को कॉल करने के बजाय अपने खुद के Vercel बैकएंड एंडपॉइंट को कॉल करेंगे
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
-          // यह लाइन अब बिना किसी एरर के गिटहब पर जाएगी क्योंकि इसमें असली की (key) छुपी हुई है
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://vercel.app",
-          "X-Title": "Nova Mind"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3-8b-instruct:free",
-          messages: [
-            { 
-              role: "system", 
-              content: "You are a friendly AI assistant named NOVA MIND. Always reply naturally and uniquely in Hinglish. Remember user details like their name throughout the conversation. Never use repetitive template answers." 
-            },
-            ...chatHistory,
-            { role: "user", content: messageText }
-          ]
+          message: messageText,
+          history: chatHistory
         })
       });
 
       const data = await response.json();
-      const botReply = data.choices.message.content;
+      const botReply = data.reply;
 
       setMessages(prev => {
         const updated = [...prev];
@@ -77,7 +65,7 @@ function App() {
       
       {/* हेडर बार */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#0d1117', borderBottom: '1px solid #21262d' }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(45deg, #1f4068, #162447)', display: 'flex', justifyContent: 'center', alignMitems: 'center', marginRight: '12px', border: '1px solid #007bff' }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(45deg, #1f4068, #162447)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: '12px', border: '1px solid #007bff' }}>
           <span style={{ fontSize: '12px', color: '#007bff', fontWeight: 'bold' }}>AI</span>
         </div>
         <span style={{ color: '#007bff', fontWeight: 'bold', fontSize: '18px', letterSpacing: '0.5px' }}>NOVA MIND</span>
@@ -121,7 +109,7 @@ function App() {
           style={{ flex: 1, padding: '12px 16px', borderRadius: '24px', border: '1px solid #30363d', background: '#161b22', color: '#f0f6fc', outline: 'none', fontSize: '15px' }}
         />
 
-        <button onClick={sendMessage} style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#007bff', border: 'none', display: 'flex', justifyContent: 'center', alignMitems: 'center', cursor: 'pointer' }}>
+        <button onClick={sendMessage} style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#007bff', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
